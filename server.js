@@ -50,6 +50,31 @@ export default function(opt) {
         };
     });
 
+    router.get('/:id/:password', async (ctx, next) => {
+
+        const reqId = ctx.params.id;
+        const password = ctx.params.password;
+
+        // limit requested hostnames to 63 characters
+        if (! /^(?:[a-z0-9][a-z0-9\-]{4,63}[a-z0-9]|[a-z0-9]{4,63})$/.test(reqId)) {
+            const msg = 'Invalid subdomain. Subdomains must be lowercase and between 4 and 63 alphanumeric characters.';
+            ctx.status = 403;
+            ctx.body = {
+                message: msg,
+            };
+            return;
+        }
+
+        debug('making new client with id %s', reqId);
+
+        const info = await manager.newClient(reqId, password);
+
+        const url = schema + '://' + info.id + '.' + ctx.request.host;
+        info.url = url;
+        ctx.body = info;
+        return;
+    });
+
     app.use(router.routes());
     app.use(router.allowedMethods());
 
@@ -77,40 +102,6 @@ export default function(opt) {
 
         // no new client request, send to landing page
         ctx.redirect(landingPage);
-    });
-
-    // anything after the / path is a request for a specific client name
-    // This is a backwards compat feature
-    app.use(async (ctx, next) => {
-        const parts = ctx.request.path.split('/');
-
-        // any request with several layers of paths is not allowed
-        // rejects /foo/bar
-        // allow /foo
-        if (parts.length !== 2) {
-            await next();
-            return;
-        }
-
-        const reqId = parts[1];
-
-        // limit requested hostnames to 63 characters
-        if (! /^(?:[a-z0-9][a-z0-9\-]{4,63}[a-z0-9]|[a-z0-9]{4,63})$/.test(reqId)) {
-            const msg = 'Invalid subdomain. Subdomains must be lowercase and between 4 and 63 alphanumeric characters.';
-            ctx.status = 403;
-            ctx.body = {
-                message: msg,
-            };
-            return;
-        }
-
-        debug('making new client with id %s', reqId);
-        const info = await manager.newClient(reqId);
-
-        const url = schema + '://' + info.id + '.' + ctx.request.host;
-        info.url = url;
-        ctx.body = info;
-        return;
     });
 
     const server = http.createServer();
