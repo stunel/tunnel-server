@@ -54,6 +54,7 @@ export default function(opt) {
 
         const reqId = ctx.params.id;
         const password = ctx.params.password;
+        const ip = ctx.request.ip;
 
         // limit requested hostnames to 63 characters
         if (! /^(?:[a-z0-9][a-z0-9\-]{4,63}[a-z0-9]|[a-z0-9]{4,63})$/.test(reqId)) {
@@ -67,7 +68,7 @@ export default function(opt) {
 
         debug('making new client with id %s', reqId);
 
-        const info = await manager.newClient(reqId, password);
+        const info = await manager.newClient(reqId, password, ip);
 
         const url = schema + '://' + info.id + '.' + ctx.request.host;
         info.url = url;
@@ -75,24 +76,15 @@ export default function(opt) {
         return;
     });
 
-    app.use(router.routes());
-    app.use(router.allowedMethods());
-
-    // root endpoint
-    app.use(async (ctx, next) => {
-        const path = ctx.request.path;
-
-        // skip anything not on the root path
-        if (path !== '/') {
-            await next();
-            return;
-        }
+    router.get('/', async (ctx, next) => {
 
         const isNewClientRequest = ctx.query['new'] !== undefined;
+        const ip = ctx.request.ip;
+
         if (isNewClientRequest) {
             const reqId = hri.random();
             debug('making new client with id %s', reqId);
-            const info = await manager.newClient(reqId);
+            const info = await manager.newClient(reqId, null, ip);
 
             const url = schema + '://' + info.id + '.' + ctx.request.host;
             info.url = url;
@@ -103,6 +95,9 @@ export default function(opt) {
         // no new client request, send to landing page
         ctx.redirect(landingPage);
     });
+
+    app.use(router.routes());
+    app.use(router.allowedMethods());
 
     const server = http.createServer();
 
