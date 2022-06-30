@@ -70,7 +70,7 @@ export default function(opt) {
 
         const info = await manager.newClient(reqId, password, ip);
 
-        const url = schema + '://' + info.id + '.' + ctx.request.host;
+        const url = schema + '://' + info.id + '.' + ctx.request.host.replace(":3000", "");
         info.url = url;
         ctx.body = info;
         return;
@@ -86,7 +86,7 @@ export default function(opt) {
             debug('making new client with id %s', reqId);
             const info = await manager.newClient(reqId, null, ip);
 
-            const url = schema + '://' + info.id + '.stunel.io';
+            const url = schema + '://' + info.id + '.' + ctx.request.host.replace(":3000", "");
             info.url = url;
             ctx.body = info;
             return;
