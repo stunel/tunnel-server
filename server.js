@@ -78,21 +78,7 @@ export default function(opt) {
 
     router.get('/', async (ctx, next) => {
 
-        const isNewClientRequest = ctx.query['new'] !== undefined;
-        const ip = ctx.request.ip;
-
-        if (isNewClientRequest) {
-            const reqId = hri.random();
-            debug('making new client with id %s', reqId);
-            const info = await manager.newClient(reqId, null, ip);
-
-            const url = schema + '://' + info.id + '.' + ctx.request.host;
-            info.url = url;
-            ctx.body = info;
-            return;
-        }
-
-        // no new client request, send to landing page
+        //send to landing page
         ctx.redirect(landingPage);
     });
 
