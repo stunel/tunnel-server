@@ -28,7 +28,7 @@ export default function(opt) {
     const app = new Koa();
     const router = new Router();
 
-    router.get('/api/status', async (ctx, next) => {
+    router.get('/:client_ip/api/status', async (ctx, next) => {
         const stats = manager.stats;
         ctx.body = {
             tunnels: stats.tunnels,
@@ -36,7 +36,7 @@ export default function(opt) {
         };
     });
 
-    router.get('/api/tunnels/:id/status', async (ctx, next) => {
+    router.get('/:client_ip/api/tunnels/:id/status', async (ctx, next) => {
         const clientId = ctx.params.id;
         const client = manager.getClient(clientId);
         if (!client) {
@@ -50,11 +50,11 @@ export default function(opt) {
         };
     });
 
-    router.get('/:id/:password', async (ctx, next) => {
+    router.get('/:client_ip/:id/:password', async (ctx, next) => {
 
         const reqId = ctx.params.id;
         const password = ctx.params.password;
-        const ip = ctx.request.ip;
+        const ip = ctx.params.client_ip;
 
         // limit requested hostnames to 63 characters
         if (! /^(?:[a-z0-9][a-z0-9\-]{4,63}[a-z0-9]|[a-z0-9]{4,63})$/.test(reqId)) {
@@ -76,10 +76,10 @@ export default function(opt) {
         return;
     });
 
-    router.get('/', async (ctx, next) => {
+    router.get('/:client_ip', async (ctx, next) => {
 
         const isNewClientRequest = ctx.query['new'] !== undefined;
-        const ip = ctx.request.ip;
+        const ip = ctx.params.client_ip;
 
         if (isNewClientRequest) {
             const reqId = hri.random();
