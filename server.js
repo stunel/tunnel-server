@@ -78,19 +78,19 @@ export default function(opt) {
 
     router.get('/:client_ip', async (ctx, next) => {
 
-        const isNewClientRequest = ctx.query['new'] !== undefined;
-        const ip = ctx.params.client_ip;
+        // const isNewClientRequest = ctx.query['new'] !== undefined;
+        // const ip = ctx.params.client_ip;
 
-        if (isNewClientRequest) {
-            const reqId = hri.random();
-            debug('making new client with id %s', reqId);
-            const info = await manager.newClient(reqId, null, ip);
+        // if (isNewClientRequest) {
+        //     const reqId = hri.random();
+        //     debug('making new client with id %s', reqId);
+        //     const info = await manager.newClient(reqId, null, ip);
 
-            const url = schema + '://' + info.id + '.' + ctx.request.host.replace(":3000", "");
-            info.url = url;
-            ctx.body = info;
-            return;
-        }
+        //     const url = schema + '://' + info.id + '.' + ctx.request.host.replace(":3000", "");
+        //     info.url = url;
+        //     ctx.body = info;
+        //     return;
+        // }
 
         // no new client request, send to landing page
         ctx.redirect(landingPage);
