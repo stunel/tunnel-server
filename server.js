@@ -28,7 +28,7 @@ export default function(opt) {
     const app = new Koa();
     const router = new Router();
 
-    router.get('/:client_ip/api/status', async (ctx, next) => {
+    router.get('/api/status', async (ctx, next) => {
         const stats = manager.stats;
         ctx.body = {
             tunnels: stats.tunnels,
@@ -36,7 +36,7 @@ export default function(opt) {
         };
     });
 
-    router.get('/:client_ip/api/tunnels/:id/status', async (ctx, next) => {
+    router.get('/api/tunnels/:id/status', async (ctx, next) => {
         const clientId = ctx.params.id;
         const client = manager.getClient(clientId);
         if (!client) {
@@ -50,11 +50,11 @@ export default function(opt) {
         };
     });
 
-    router.get('/:client_ip/:id/:password', async (ctx, next) => {
+    router.get('/:id/:password', async (ctx, next) => {
 
         const reqId = ctx.params.id;
         const password = ctx.params.password;
-        const ip = ctx.params.client_ip;
+        const ip = ctx.request.ip;
 
         // limit requested hostnames to 63 characters
         if (! /^(?:[a-z0-9][a-z0-9\-]{4,63}[a-z0-9]|[a-z0-9]{4,63})$/.test(reqId)) {
@@ -70,27 +70,27 @@ export default function(opt) {
 
         const info = await manager.newClient(reqId, password, ip);
 
-        const url = schema + '://' + info.id + '.' + ctx.request.host.replace(":3000", "");
+        const url = schema + '://' + info.id + '.' + ctx.request.host;
         info.url = url;
         ctx.body = info;
         return;
     });
 
-    router.get('/:client_ip', async (ctx, next) => {
+    router.get('/', async (ctx, next) => {
 
-        // const isNewClientRequest = ctx.query['new'] !== undefined;
-        // const ip = ctx.params.client_ip;
+        const isNewClientRequest = ctx.query['new'] !== undefined;
+        const ip = ctx.request.ip;
 
-        // if (isNewClientRequest) {
-        //     const reqId = hri.random();
-        //     debug('making new client with id %s', reqId);
-        //     const info = await manager.newClient(reqId, null, ip);
+        if (isNewClientRequest) {
+            const reqId = hri.random();
+            debug('making new client with id %s', reqId);
+            const info = await manager.newClient(reqId, null, ip);
 
-        //     const url = schema + '://' + info.id + '.' + ctx.request.host.replace(":3000", "");
-        //     info.url = url;
-        //     ctx.body = info;
-        //     return;
-        // }
+            const url = schema + '://' + info.id + '.' + ctx.request.host;
+            info.url = url;
+            ctx.body = info;
+            return;
+        }
 
         // no new client request, send to landing page
         ctx.redirect(landingPage);
