@@ -79,16 +79,22 @@ export default function(opt) {
             }
 
             //check if the subdomain starts with global brand name
+            const error = new Error();
             globalBrands.forEach(brand => {
                 if(reqId.startsWith(brand.toLowerCase())){
-                    const msg = `Subdomain rejected: This is a possible phishing attack on a global brand ${brand}`;
-                    ctx.status = 403;
-                    ctx.body = {
-                        message: msg,
-                    };
-                    return;
+                    error.message = `Subdomain rejected: This is a possible phishing attack on a global brand ${brand}`;
+                    error.status = 403;
                 }
             })
+
+            if(error.message){
+                const msg = error.message;
+                ctx.status = error.status;
+                ctx.body = {
+                    message: msg,
+                };
+                return;
+            }
     
             debug('making new client with id %s', reqId);
     
