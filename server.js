@@ -80,18 +80,13 @@ export default function(opt) {
 
             //check if the subdomain starts with global brand name
             globalBrands.forEach(brand => {
-                try{
-                    if(reqId.startsWith(brand.toLowerCase())){
-                        const msg = `Subdomain rejected: This is a possible phishing attack on a global brand ${brand}`;
-                        ctx.status = 403;
-                        ctx.body = {
-                            message: msg,
-                        };
-                        return;
-                    }
-                }
-                catch(err){
-                    
+                if(reqId.startsWith(brand.toLowerCase())){
+                    const msg = `Subdomain rejected: This is a possible phishing attack on a global brand ${brand}`;
+                    ctx.status = 403;
+                    ctx.body = {
+                        message: msg,
+                    };
+                    return;
                 }
             })
     
