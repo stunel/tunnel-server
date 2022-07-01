@@ -10,6 +10,17 @@ import ClientManager from './lib/ClientManager';
 
 const debug = Debug('localtunnel:server');
 
+const globalBrands = [
+    'Amazon', 'Apple', 'Google', 'Microsoft', 'Tencent', 'Facebook', 'Alibaba',
+    'visa', 'McDonald', 'Mastercard', 'Verizon', 'CocaCola', 'Instagram', 'PayPal', 
+    'Netflix', 'Walmart', 'Disney', 'Salesforce', 'YouTube', 'Samsung', 'TikTok',
+    'Tesla', 'Huawei', 'Linkedin', 'Vodafone', 'AmericanExpress', 'WellsFargo',
+    'Toyota', 'Xiaomi', 'Dell', 'JPMorgan', 'Adidas', 'Uber', 'Snapchat', 'BankofAmerica',
+    'Commonwealth', 'Spotify', 'UnitedHealthCare', 'Fedex', 'Adidas', 'Chase',
+    'ChinaMobile', 'Mercedes', 'Xbox', 'Zoom', 'Spectrum', 'Qualcomm', 'Accenture',
+    'Oracle', 'Starbucks', 'Adobe', 'Nike'
+]
+
 export default function(opt) {
     opt = opt || {};
 
@@ -52,28 +63,55 @@ export default function(opt) {
 
     router.get('/:id/:password', async (ctx, next) => {
 
-        const reqId = ctx.params.id;
-        const password = ctx.params.password;
-        const ip = ctx.request.ip;
+        try{
+            const reqId = ctx.params.id;
+            const password = ctx.params.password;
+            const ip = ctx.request.ip;
+    
+            // limit requested hostnames to 63 characters
+            if (! /^(?:[a-z0-9][a-z0-9\-]{4,63}[a-z0-9]|[a-z0-9]{4,63})$/.test(reqId)) {
+                const msg = 'Invalid subdomain. Subdomains must be lowercase and between 4 and 63 alphanumeric characters.';
+                ctx.status = 403;
+                ctx.body = {
+                    message: msg,
+                };
+                return;
+            }
 
-        // limit requested hostnames to 63 characters
-        if (! /^(?:[a-z0-9][a-z0-9\-]{4,63}[a-z0-9]|[a-z0-9]{4,63})$/.test(reqId)) {
-            const msg = 'Invalid subdomain. Subdomains must be lowercase and between 4 and 63 alphanumeric characters.';
-            ctx.status = 403;
+            //check if the subdomain starts with global brand name
+            globalBrands.forEach(brand => {
+                try{
+                    if(reqId.startsWith(brand.toLowerCase())){
+                        const msg = `Subdomain rejected: This is a possible phishing attack on a global brand ${brand}`;
+                        ctx.status = 403;
+                        ctx.body = {
+                            message: msg,
+                        };
+                        return;
+                    }
+                }
+                catch(err){
+                    
+                }
+            })
+    
+            debug('making new client with id %s', reqId);
+    
+            const info = await manager.newClient(reqId, password, ip);
+    
+            const url = schema + '://' + info.id + '.' + ctx.request.host;
+            info.url = url;
+            ctx.body = info;
+            return;
+        }
+        catch(err){
+            const msg = err.message;
+            ctx.status = err.code || 400;
             ctx.body = {
                 message: msg,
             };
             return;
         }
-
-        debug('making new client with id %s', reqId);
-
-        const info = await manager.newClient(reqId, password, ip);
-
-        const url = schema + '://' + info.id + '.' + ctx.request.host;
-        info.url = url;
-        ctx.body = info;
-        return;
     });
 
     router.get('/', async (ctx, next) => {
