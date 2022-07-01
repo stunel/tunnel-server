@@ -82,7 +82,7 @@ export default function(opt) {
             const error = new Error();
             globalBrands.forEach(brand => {
                 if(reqId.startsWith(brand.toLowerCase())){
-                    error.message = `This is a possible phishing attack on a global brand ${brand}`;
+                    error.message = `This is a possible phishing attack on a global brand ${brand}. Subdomain should not start with the name of a global brand`;
                     error.status = 403;
                 }
             })
